@@ -19,6 +19,7 @@ use ledgehq\craftledge\checks\FormieCheck;
 use ledgehq\craftledge\checks\FreeformCheck;
 use ledgehq\craftledge\checks\LicenseCheck;
 use ledgehq\craftledge\checks\MemoryCheck;
+use ledgehq\craftledge\checks\PhpVersionCheck;
 use ledgehq\craftledge\checks\PluginVersionsCheck;
 use ledgehq\craftledge\checks\QueueCheck;
 use ledgehq\craftledge\Ledge;
@@ -46,6 +47,7 @@ class HealthService extends Component
         $this->registerCheck(new EnvironmentCheck());
         $this->registerCheck(new FormieCheck());
         $this->registerCheck(new FreeformCheck());
+        $this->registerCheck(new PhpVersionCheck());
     }
 
     public function registerCheck(CheckInterface $check): void

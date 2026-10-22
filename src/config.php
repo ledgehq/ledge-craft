@@ -86,6 +86,7 @@ return [
     //     'environment' => true,
     //     'formie' => true,
     //     'freeform' => true,
+    //     'phpVersion' => true,
     // ],
 
     // Disk: percentage of the @storage volume in use.
@@ -136,6 +137,11 @@ return [
 
     // Status when a Craft or plugin license is invalid, mismatched, or astray.
     // 'licenseIssueStatus' => 'unhealthy',
+
+    // PHP branch in its security-fixes-only phase / past end of life, per
+    // php.net's release calendar.
+    // 'phpSecurityOnlyStatus' => 'degraded',
+    // 'phpEolStatus' => 'unhealthy',
 
     // ---------------------------------------------------------------------
     // Acquire (automated update testing & backups)
