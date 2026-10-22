@@ -54,6 +54,7 @@ class Settings extends Model
         'environment' => true,
         'formie' => true,
         'freeform' => true,
+        'phpVersion' => true,
     ];
 
     public ?int $diskDegradedAt = 80;
@@ -83,6 +84,8 @@ class Settings extends Model
     public string $devModeStatus = CheckResult::STATUS_DEGRADED;
     public string $missingEnvVarsStatus = CheckResult::STATUS_DEGRADED;
     public string $licenseIssueStatus = CheckResult::STATUS_UNHEALTHY;
+    public string $phpSecurityOnlyStatus = CheckResult::STATUS_DEGRADED;
+    public string $phpEolStatus = CheckResult::STATUS_UNHEALTHY;
 
     public array $ignoredEnvVars = [];
 
@@ -317,6 +320,7 @@ class Settings extends Model
         $statuses = [
             'updateAvailableStatus', 'criticalUpdateStatus', 'devModeStatus',
             'missingEnvVarsStatus', 'licenseIssueStatus',
+            'phpSecurityOnlyStatus', 'phpEolStatus',
         ];
 
         return [

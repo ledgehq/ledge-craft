@@ -59,7 +59,7 @@ Every threshold, status level, endpoint path, and toggle is configurable. The an
 
 Each option resolves in the same order: an explicit key in `config/ledge.php` wins, then the matching `LEDGE_*` env var, then the default. The env var name is the option name in SCREAMING_SNAKE_CASE, so `diskUnhealthyAt` reads `LEDGE_DISK_UNHEALTHY_AT`. Config values may also be `$VAR` references. `ledgeBaseUrl` is the one exception and is never read from the environment.
 
-Thresholds come in `DegradedAt` / `UnhealthyAt` pairs. A check trips a tier when its measured value is greater than or equal to that tier. Set a tier to `null` (or its env var to empty or `off`) to disable it. Checks that report a condition rather than a number (`devMode`, missing env vars, license issues, available updates) take a status level instead: `healthy`, `degraded`, or `unhealthy`.
+Thresholds come in `DegradedAt` / `UnhealthyAt` pairs. A check trips a tier when its measured value is greater than or equal to that tier. Set a tier to `null` (or its env var to empty or `off`) to disable it. Checks that report a condition rather than a number (`devMode`, missing env vars, license issues, available updates, the PHP support phase) take a status level instead: `healthy`, `degraded`, or `unhealthy`.
 
 ```php
 // config/ledge.php
@@ -79,6 +79,26 @@ LEDGE_DISABLED_CHECKS=freeform
 ```
 
 Every check echoes the values it actually used under a `thresholds` key in its result, so Ledge can show why a site tripped rather than assuming the defaults.
+
+## Checks
+
+| Check | What it reports |
+|---|---|
+| `database` | Connectivity and response time |
+| `queue` | Failed and stale jobs on Craft's queue |
+| `disk` | Usage of the `@storage` volume, plus an optional absolute free-bytes floor |
+| `memory` | PHP memory usage against `memory_limit` |
+| `craftVersion` | Available and critical Craft updates, with the license's update eligibility |
+| `plugins` | Installed plugins with available or critical updates |
+| `debugMode` | `devMode` and `allowAdminChanges` |
+| `failedLogins` | Users with failed login attempts inside `failedLoginsWindow` |
+| `license` | Craft and plugin license status |
+| `environment` | Env vars referenced from config files that are not defined |
+| `formie` | Failed Formie notifications (when Formie is installed) |
+| `freeform` | Freeform error log lines (when Freeform is installed) |
+| `phpVersion` | Support phase of the running PHP branch (`active`, `security`, `eol`) against php.net's release calendar |
+
+Turn a check off with `enabledChecks` or `LEDGE_DISABLED_CHECKS`.
 
 ## Dependencies
 

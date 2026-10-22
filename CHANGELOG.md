@@ -1,5 +1,8 @@
 # Release Notes for Ledge
 
+## 4.6.0 - 2026-10-22
+- Added the `phpVersion` check: the running PHP branch's support phase against php.net's release calendar (`active`, `security`, `eol`, or `unknown` for a branch the plugin does not know yet), with `activeSupportUntil` / `securitySupportUntil` dates. Security-only reports `phpSecurityOnlyStatus` (default `degraded`), end of life reports `phpEolStatus` (default `unhealthy`); both have `LEDGE_*` env fallbacks. Same check and payload shape as the 5.x plugin and the Laravel package
+
 ## 4.5.1 - 2026-09-03
 - Fixed: a boolean option given a value that is not a recognisable boolean (e.g. `'dependenciesEnabled' => 'enabled'`, or a `$VAR` reference to an unset env var) silently became `false`. It is now logged and the default is kept, matching how invalid ints and status levels are already handled
 
