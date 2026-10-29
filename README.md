@@ -96,7 +96,7 @@ Every check echoes the values it actually used under a `thresholds` key in its r
 | `environment` | Env vars referenced from config files that are not defined |
 | `formie` | Failed Formie notifications (when Formie is installed) |
 | `freeform` | Freeform error log lines (when Freeform is installed) |
-| `phpVersion` | Support phase of the running PHP branch (`active`, `security`, `eol`) against php.net's release calendar |
+| `phpVersion` | Support phase of the running PHP branch (`active`, `security`, `eol`) against php.net's release calendar, and days until its end of life (`unhealthy` within 90 by default) |
 
 Turn a check off with `enabledChecks` or `LEDGE_DISABLED_CHECKS`.
 

@@ -30,7 +30,45 @@ final class PhpVersionCheckTest extends TestCase
 
         $this->assertSame('healthy', $security?->status);
         $this->assertSame('degraded', $eol?->status);
-        $this->assertSame(['securityOnlyStatus' => 'healthy', 'eolStatus' => 'degraded'], $eol?->meta['thresholds']);
+        $this->assertSame([
+            'securityOnlyStatus' => 'healthy',
+            'eolStatus' => 'degraded',
+            'eolDegradedWithinDays' => null,
+            'eolUnhealthyWithinDays' => 90,
+        ], $eol?->meta['thresholds']);
+    }
+
+    public function testApproachingEndOfLifeIsUnhealthyByDefault(): void
+    {
+        $this->assertSame(['security', 'degraded'], $this->phase('8.2.0', '2026-10-01'));
+        $this->assertSame(['security', 'unhealthy'], $this->phase('8.2.0', '2026-10-02'));
+
+        $result = (new PhpVersionCheck(Settings::fromConfig([]), '8.2.0', fn(): int => (int)strtotime('2026-10-28 12:00:00 UTC')))->run();
+
+        $this->assertSame(64, $result?->meta['daysUntilEol']);
+        $this->assertSame('PHP 8.2 reaches end of life on 2026-12-31 (64 days)', $result?->output);
+    }
+
+    public function testEndOfLifeWindowIsConfigurable(): void
+    {
+        $settings = Settings::fromConfig([
+            'phpSecurityOnlyStatus' => 'healthy',
+            'phpEolDegradedWithinDays' => 180,
+            'phpEolUnhealthyWithinDays' => null,
+        ]);
+        $now = fn(): int => (int)strtotime('2026-10-28 12:00:00 UTC');
+
+        $this->assertSame('degraded', (new PhpVersionCheck($settings, '8.2.0', $now))->run()?->status);
+        $this->assertSame('healthy', (new PhpVersionCheck($settings, '8.3.0', $now))->run()?->status);
+    }
+
+    public function testWindowDoesNotOverrideAWorsePhaseStatus(): void
+    {
+        $settings = Settings::fromConfig(['phpSecurityOnlyStatus' => 'unhealthy', 'phpEolUnhealthyWithinDays' => null, 'phpEolDegradedWithinDays' => 90]);
+        $result = (new PhpVersionCheck($settings, '8.2.0', fn(): int => (int)strtotime('2026-10-28 12:00:00 UTC')))->run();
+
+        $this->assertSame('unhealthy', $result?->status);
+        $this->assertSame('PHP 8.2 receives security fixes only until 2026-12-31', $result?->output);
     }
 
     public function testOutputNamesTheDate(): void
