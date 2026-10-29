@@ -1,5 +1,8 @@
 # Release Notes for Ledge
 
+## 5.10.0 - 2026-10-29
+- The `phpVersion` check now trips when the running branch is close to end of life, whatever its phase: `phpEolUnhealthyWithinDays` (default `90`) and `phpEolDegradedWithinDays` (default `null`, off) count days until the branch's security support ends, inclusive, with `LEDGE_*` env fallbacks. The worse of this and the phase status wins. Adds `daysUntilEol` to the check's meta (`null` for an unknown or end-of-life branch) and both values to `thresholds`. **Behavior change:** sites on PHP 8.2, which reaches end of life on 2026-12-31, report `unhealthy` as soon as they upgrade. Set `phpEolUnhealthyWithinDays` to `null` to keep the previous behavior
+
 ## 5.9.0 - 2026-10-22
 - Added the `phpVersion` check: the running PHP branch's support phase against php.net's release calendar (`active`, `security`, `eol`, or `unknown` for a branch the plugin does not know yet), with `activeSupportUntil` / `securitySupportUntil` dates. Security-only reports `phpSecurityOnlyStatus` (default `degraded`), end of life reports `phpEolStatus` (default `unhealthy`); both have `LEDGE_*` env fallbacks. Same check and payload shape as the Laravel package
 

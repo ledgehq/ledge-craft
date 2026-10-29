@@ -142,6 +142,10 @@ return [
     // php.net's release calendar.
     // 'phpSecurityOnlyStatus' => 'degraded',
     // 'phpEolStatus' => 'unhealthy',
+    // Days before end of life that trip each tier, whatever the phase
+    // (null = tier disabled).
+    // 'phpEolDegradedWithinDays' => null,
+    // 'phpEolUnhealthyWithinDays' => 90,
 
     // ---------------------------------------------------------------------
     // Acquire (automated update testing & backups)

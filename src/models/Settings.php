@@ -86,6 +86,8 @@ class Settings extends Model
     public string $licenseIssueStatus = CheckResult::STATUS_UNHEALTHY;
     public string $phpSecurityOnlyStatus = CheckResult::STATUS_DEGRADED;
     public string $phpEolStatus = CheckResult::STATUS_UNHEALTHY;
+    public ?int $phpEolDegradedWithinDays = null;
+    public ?int $phpEolUnhealthyWithinDays = 90;
 
     public array $ignoredEnvVars = [];
 
@@ -316,6 +318,7 @@ class Settings extends Model
             'failedLoginsDegradedAt', 'failedLoginsUnhealthyAt',
             'formieDegradedAt', 'formieUnhealthyAt',
             'freeformDegradedAt', 'freeformUnhealthyAt',
+            'phpEolDegradedWithinDays', 'phpEolUnhealthyWithinDays',
         ];
         $statuses = [
             'updateAvailableStatus', 'criticalUpdateStatus', 'devModeStatus',
