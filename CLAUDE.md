@@ -137,6 +137,13 @@ Event::on(
 - Each check puts the effective values it used under `meta['thresholds']`
 - New options must be added to `src/config.php` with a comment and default
 
+## Branches & Versioning
+
+- `5.x` (Craft 5) is the main line. `4.x` (Craft 4) is a parallel line that is never merged; each 5.x release is ported to 4.x as its own commit and tag
+- Keep version numbers in step across the lines where possible: 5.11.0 ships as 4.11.0, and a shared fix as 5.11.1 / 4.11.1
+- A change only one line needs (e.g. a Craft 4 compatibility fix) gets a patch release (third digit) on that line alone, so patch numbers may drift but major.minor never does
+- The lines were offset until 5.10.0 / 4.7.0; the next minor release realigns them (4.7.x jumps to 4.11.0)
+
 ## Code Style
 
 - PHP 8.2+ features (typed properties, match expressions, constructor promotion, readonly)
