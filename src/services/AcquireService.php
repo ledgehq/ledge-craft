@@ -53,7 +53,7 @@ class AcquireService extends Component
         $this->reserveRun($command);
 
         try {
-            $this->queueJob($command, $settings->acquireJobTtr);
+            $this->queueJob($command, $settings->acquireJobTtr, $settings->acquireJobPriority);
         } catch (Throwable $e) {
             Craft::$app->getCache()->delete(self::seenKey($command->runId));
             Craft::$app->getCache()->delete(self::statusKey($command->runId));
@@ -248,7 +248,7 @@ class AcquireService extends Component
         return gmdate('Y-m-d\TH:i:s\Z');
     }
 
-    private function queueJob(AcquireCommand $command, int $ttr): void
+    private function queueJob(AcquireCommand $command, int $ttr, int $priority): void
     {
         $job = new AcquireBundleJob([
             'runId' => $command->runId,
@@ -262,7 +262,7 @@ class AcquireService extends Component
         $queue = Craft::$app->getQueue();
 
         if ($queue instanceof Queue) {
-            $queue->ttr($ttr)->push($job);
+            $queue->ttr($ttr)->priority($priority)->push($job);
         } else {
             $queue->push($job);
         }

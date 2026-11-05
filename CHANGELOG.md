@@ -1,5 +1,9 @@
 # Release Notes for Ledge
 
+## 4.11.0 - 2026-11-05
+- Added `acquireJobPriority` (default `15`, env `LEDGE_ACQUIRE_JOB_PRIORITY`): the queue priority the acquire bundle job is pushed with. Lower runs first and Craft's default is 1024, so backups and update-test bundles no longer wait behind a backlog such as a large resave. Priority only orders waiting jobs; nothing running is interrupted. Honoured by Craft's database queue; Craft Cloud's SQS queue and other drivers ignore it. **Behavior change:** the job previously used Craft's default (1024), so it now runs ahead of jobs pushed without a priority, including Formie notifications; set Formie's `queuePriority` below this value to keep them first
+- Same as 5.11.0. From this release the 4.x and 5.x lines share major.minor version numbers (4.8.0–4.10.0 were skipped to realign)
+
 ## 4.7.0 - 2026-10-29
 - The `phpVersion` check now trips when the running branch is close to end of life, whatever its phase: `phpEolUnhealthyWithinDays` (default `90`) and `phpEolDegradedWithinDays` (default `null`, off) count days until the branch's security support ends, inclusive, with `LEDGE_*` env fallbacks. The worse of this and the phase status wins. Adds `daysUntilEol` to the check's meta (`null` for an unknown or end-of-life branch) and both values to `thresholds`. Same behavior as 5.10.0. **Behavior change:** sites on PHP 8.2, which reaches end of life on 2026-12-31, report `unhealthy` as soon as they upgrade. Set `phpEolUnhealthyWithinDays` to `null` to keep the previous behavior
 
