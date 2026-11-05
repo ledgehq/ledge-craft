@@ -165,6 +165,12 @@ return [
 
     // 'acquireMaxBundleBytes' => 524288000,
     // 'acquireJobTtr' => 3600,
+    // Queue priority of the bundle job; lower runs first and Craft's default
+    // is 1024, so 15 runs ahead of a resave backlog. Only Craft's database
+    // queue honours it; Craft Cloud's SQS queue and other drivers ignore it.
+    // To keep Formie notifications ahead of it, set Formie's `queuePriority`
+    // below this value.
+    // 'acquireJobPriority' => 15,
 
     // Base URL of the Ledge service used to discover command-signing keys.
     // File-config only (never read from the environment) because it is a

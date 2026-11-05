@@ -103,6 +103,7 @@ class Settings extends Model
     public array $acquireEnvDenylist = [];
     public int $acquireMaxBundleBytes = 524288000;
     public int $acquireJobTtr = 3600;
+    public int $acquireJobPriority = 15;
 
     /**
      * Builds the effective settings from a `config/ledge.php` array: explicit
@@ -331,7 +332,7 @@ class Settings extends Model
             [['endpointPath', 'acquirePath', 'urisPath', 'dependenciesPath', 'keyHeader', 'queryKeyParam'], 'string'],
             [$percent, 'integer', 'min' => 1, 'max' => 100],
             [$counts, 'integer', 'min' => 0],
-            [['queueStaleAfter', 'failedLoginsWindow', 'acquireMaxBundleBytes', 'acquireJobTtr'], 'integer', 'min' => 1],
+            [['queueStaleAfter', 'failedLoginsWindow', 'acquireMaxBundleBytes', 'acquireJobTtr', 'acquireJobPriority'], 'integer', 'min' => 1],
             [$statuses, 'in', 'range' => self::STATUS_LEVELS],
         ];
     }

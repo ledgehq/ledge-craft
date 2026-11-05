@@ -143,6 +143,17 @@ final class SettingsTest extends TestCase
         $this->assertSame(60, $s->memoryDegradedAt);
     }
 
+    public function testAcquireJobPriority(): void
+    {
+        $this->assertSame(15, Settings::fromConfig([])->acquireJobPriority);
+        $this->assertSame(10, Settings::fromConfig(['acquireJobPriority' => 10])->acquireJobPriority);
+        $this->assertSame(15, Settings::fromConfig(['acquireJobPriority' => 0])->acquireJobPriority);
+
+        $this->env('LEDGE_ACQUIRE_JOB_PRIORITY', '2048');
+        $this->assertSame(2048, Settings::fromConfig([])->acquireJobPriority);
+        $this->assertSame(10, Settings::fromConfig(['acquireJobPriority' => 10])->acquireJobPriority);
+    }
+
     public function testUnparseableBoolKeepsDefault(): void
     {
         $s = Settings::fromConfig(['dependenciesEnabled' => 'enabled', 'urisEnabled' => 'yes']);
