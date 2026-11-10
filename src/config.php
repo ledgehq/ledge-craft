@@ -139,12 +139,13 @@ return [
     // 'licenseIssueStatus' => 'unhealthy',
 
     // PHP branch in its security-fixes-only phase / past end of life, per
-    // php.net's release calendar.
-    // 'phpSecurityOnlyStatus' => 'degraded',
+    // php.net's release calendar. Security-only is healthy by default: the
+    // status follows the days left before end of life, below.
+    // 'phpSecurityOnlyStatus' => 'healthy',
     // 'phpEolStatus' => 'unhealthy',
     // Days before end of life that trip each tier, whatever the phase
     // (null = tier disabled).
-    // 'phpEolDegradedWithinDays' => null,
+    // 'phpEolDegradedWithinDays' => 180,
     // 'phpEolUnhealthyWithinDays' => 90,
 
     // ---------------------------------------------------------------------

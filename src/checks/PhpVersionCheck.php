@@ -13,9 +13,11 @@ use Throwable;
 /**
  * Support phase of the running PHP branch against php.net's release
  * calendar. `active` is healthy, `security` (bug fixes have stopped) reports
- * `phpSecurityOnlyStatus`, `eol` reports `phpEolStatus`. Independently of
- * the phase, a branch within `phpEolDegradedWithinDays` /
- * `phpEolUnhealthyWithinDays` of its end of life trips that tier. Branches
+ * `phpSecurityOnlyStatus` (healthy by default), `eol` reports
+ * `phpEolStatus`. Independently of the phase, a branch within
+ * `phpEolDegradedWithinDays` / `phpEolUnhealthyWithinDays` (180 / 90 by
+ * default) of its end of life trips that tier, so by default the status
+ * follows the time left before end of life rather than the phase. Branches
  * the table does not know are reported as `unknown` and never trip. Mirrors
  * the Laravel package's `phpVersion` check.
  */
