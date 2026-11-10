@@ -84,9 +84,9 @@ class Settings extends Model
     public string $devModeStatus = CheckResult::STATUS_DEGRADED;
     public string $missingEnvVarsStatus = CheckResult::STATUS_DEGRADED;
     public string $licenseIssueStatus = CheckResult::STATUS_UNHEALTHY;
-    public string $phpSecurityOnlyStatus = CheckResult::STATUS_DEGRADED;
+    public string $phpSecurityOnlyStatus = CheckResult::STATUS_HEALTHY;
     public string $phpEolStatus = CheckResult::STATUS_UNHEALTHY;
-    public ?int $phpEolDegradedWithinDays = null;
+    public ?int $phpEolDegradedWithinDays = 180;
     public ?int $phpEolUnhealthyWithinDays = 90;
 
     public array $ignoredEnvVars = [];
