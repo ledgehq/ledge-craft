@@ -191,6 +191,81 @@ final class SettingsTest extends TestCase
         $this->assertTrue($s->isUrisEnabled());
     }
 
+    public function testContentDefaults(): void
+    {
+        $s = Settings::fromConfig([]);
+
+        $this->assertTrue($s->isContentEnabled());
+        $this->assertSame('_ledge/content', $s->contentPath);
+        $this->assertNull($s->getContentAltField());
+        $this->assertNull($s->getContentVolumes());
+        $this->assertSame(25, $s->contentSampleLimit);
+        $this->assertSame(3600, $s->contentCacheTtl);
+    }
+
+    public function testContentOptionsFromEnv(): void
+    {
+        $this->env('LEDGE_CONTENT_ENABLED', 'false');
+        $this->env('LEDGE_CONTENT_PATH', '_ops/content');
+        $this->env('LEDGE_CONTENT_ALT_FIELD', 'altText');
+        $this->env('LEDGE_CONTENT_VOLUMES', 'images, photos,,images');
+        $this->env('LEDGE_CONTENT_SAMPLE_LIMIT', '10');
+        $this->env('LEDGE_CONTENT_CACHE_TTL', '0');
+
+        $s = Settings::fromConfig([]);
+
+        $this->assertFalse($s->isContentEnabled());
+        $this->assertSame('_ops/content', $s->contentPath);
+        $this->assertSame('altText', $s->getContentAltField());
+        $this->assertSame(['images', 'photos'], $s->getContentVolumes());
+        $this->assertSame(10, $s->contentSampleLimit);
+        $this->assertSame(0, $s->contentCacheTtl);
+    }
+
+    public function testContentConfigBeatsEnv(): void
+    {
+        $this->env('LEDGE_CONTENT_ENABLED', 'true');
+        $this->env('LEDGE_CONTENT_VOLUMES', 'images');
+
+        $s = Settings::fromConfig(['contentEnabled' => false, 'contentVolumes' => ['photos']]);
+
+        $this->assertFalse($s->isContentEnabled());
+        $this->assertSame(['photos'], $s->getContentVolumes());
+    }
+
+    public function testEmptyContentVolumesAndAltFieldMeanDefaults(): void
+    {
+        $s = Settings::fromConfig(['contentVolumes' => [], 'contentAltField' => '  ']);
+        $this->assertNull($s->getContentVolumes());
+        $this->assertNull($s->getContentAltField());
+
+        $this->env('LEDGE_CONTENT_VOLUMES', '');
+        $this->env('LEDGE_CONTENT_ALT_FIELD', '');
+        $s = Settings::fromConfig([]);
+        $this->assertNull($s->getContentVolumes());
+        $this->assertNull($s->getContentAltField());
+
+        $this->assertNull(Settings::fromConfig(['contentVolumes' => null])->getContentVolumes());
+    }
+
+    public function testInvalidContentValuesFallBackToDefaults(): void
+    {
+        $s = Settings::fromConfig([
+            'contentSampleLimit' => 500,
+            'contentCacheTtl' => -1,
+            'contentAltField' => 'not a handle',
+        ]);
+
+        $this->assertSame(25, $s->contentSampleLimit);
+        $this->assertSame(3600, $s->contentCacheTtl);
+        $this->assertNull($s->getContentAltField());
+
+        $s = Settings::fromConfig(['contentSampleLimit' => 100, 'contentAltField' => 'imageAlt']);
+        $this->assertSame(100, $s->contentSampleLimit);
+        $this->assertSame('imageAlt', $s->getContentAltField());
+        $this->assertSame(0, Settings::fromConfig(['contentSampleLimit' => 0])->contentSampleLimit);
+    }
+
     public function testLedgeBaseUrlNeverReadsEnv(): void
     {
         $this->env('LEDGE_LEDGE_BASE_URL', 'https://evil.example');

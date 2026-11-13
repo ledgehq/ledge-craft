@@ -104,6 +104,32 @@ The shared key also unlocks `GET /_ledge/dependencies`, which returns the instal
 
 The health payload includes the same `hash` as `dependenciesHash`, so the service only fetches the full package list when it changes. It also carries `composerLockHash`, the SHA-256 of the raw bytes of the project's `composer.lock` (`null` when the file is absent or unreadable), so the service can tell whether what is deployed matches the lockfile committed to the linked repository. The path is configurable with `dependenciesPath` (default `_ledge/dependencies`), and the endpoint can be turned off with `dependenciesEnabled` / `LEDGE_DEPENDENCIES_ENABLED=false`, in which case the route is a 404 and both hashes are omitted from the health payload.
 
+## Content checks
+
+`GET /_ledge/content` (same shared key) reports two accessibility problems with image assets, for Ledge's accessibility view. It is not a health check: it never appears in `/health` and never changes the health status.
+
+- **Missing alt text**: images whose alt text is empty or only whitespace. By default this reads Craft's native Alternative Text; set `contentAltField` to the handle of an asset field if your alt text lives in a custom field.
+- **Filename titles**: images whose title is just the filename, such as `IMG 4032`, `Dsc 0091`, `hero-banner-final-v2` or `Screenshot 2026 01 04 At 10.22.11`. The check is conservative: a readable title generated from a descriptive filename (`team-photo.jpg` → `Team photo`) is not flagged.
+
+```json
+{
+  "generatedAt": "2026-11-13T10:00:00+00:00",
+  "altSource": "native",
+  "images": {
+    "total": 1930,
+    "missingAlt": 412,
+    "filenameTitles": 77,
+    "volumes": [{"handle": "images", "name": "Images", "total": 1200, "missingAlt": 300, "filenameTitles": 40}],
+    "samples": {
+      "missingAlt": [{"id": 123, "filename": "a.jpg", "title": "A", "volume": "images", "url": "https://…", "cpEditUrl": "https://…"}],
+      "filenameTitles": []
+    }
+  }
+}
+```
+
+Each image is counted once, in the primary site, however many sites you have. Samples are the newest affected images, up to `contentSampleLimit` (default 25) per list; `url` is `null` for volumes without public URLs. The report is cached for `contentCacheTtl` seconds (default 3600), so `generatedAt` is when it was computed. Limit the check to some volumes with `contentVolumes` (or `LEDGE_CONTENT_VOLUMES=images,photos`), change the path with `contentPath`, or turn it off with `contentEnabled` / `LEDGE_CONTENT_ENABLED=false`, which makes the route a 404.
+
 ## Acquire (automated update testing & backups)
 
 Beyond `/health`, Ledge can act as an **acquisition agent**: on a signed command from the Ledge service, the plugin produces an encrypted bundle of the site (a database dump — plus an environment + crawlable-URL manifest for update-test runs) and uploads it to object storage. This powers automated "does this update break the site?" testing and scheduled database backups.

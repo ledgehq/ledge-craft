@@ -13,6 +13,7 @@ use craft\web\UrlManager;
 use ledgehq\craftledge\console\controllers\DefaultController;
 use ledgehq\craftledge\models\Settings;
 use ledgehq\craftledge\services\AcquireService;
+use ledgehq\craftledge\services\ContentService;
 use ledgehq\craftledge\services\DependenciesService;
 use ledgehq\craftledge\services\HealthService;
 use yii\base\Event;
@@ -23,6 +24,7 @@ use yii\base\Event;
  * @property-read HealthService $health
  * @property-read AcquireService $acquire
  * @property-read DependenciesService $dependencies
+ * @property-read ContentService $content
  */
 class Ledge extends Plugin
 {
@@ -36,6 +38,7 @@ class Ledge extends Plugin
                 'health' => HealthService::class,
                 'acquire' => AcquireService::class,
                 'dependencies' => DependenciesService::class,
+                'content' => ContentService::class,
             ],
         ];
     }
@@ -74,12 +77,13 @@ class Ledge extends Plugin
         $endpointPath = $settings->endpointPath;
         $dependenciesPath = $settings->isDependenciesEnabled() ? $settings->dependenciesPath : null;
         $urisPath = $settings->isUrisEnabled() ? $settings->urisPath : null;
+        $contentPath = $settings->isContentEnabled() ? $settings->contentPath : null;
         $acquirePath = $settings->isAcquireEnabled() ? $settings->acquirePath : null;
 
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
-            function(RegisterUrlRulesEvent $event) use ($endpointPath, $dependenciesPath, $urisPath, $acquirePath) {
+            function(RegisterUrlRulesEvent $event) use ($endpointPath, $dependenciesPath, $urisPath, $contentPath, $acquirePath) {
                 $event->rules[$endpointPath] = 'ledge/health/index';
                 if ($dependenciesPath !== null) {
                     $event->rules["GET {$dependenciesPath}"] = 'ledge/dependencies/index';
@@ -87,6 +91,10 @@ class Ledge extends Plugin
 
                 if ($urisPath !== null) {
                     $event->rules["GET {$urisPath}"] = 'ledge/uris/index';
+                }
+
+                if ($contentPath !== null) {
+                    $event->rules["GET {$contentPath}"] = 'ledge/content/index';
                 }
 
                 if ($acquirePath !== null) {
