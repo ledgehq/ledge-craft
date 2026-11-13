@@ -67,6 +67,24 @@ return [
     // 'urisEnabled' => false,
     // 'urisPath' => '_ledge/uris',
 
+    // Content checks for Ledge's accessibility view: image assets with no
+    // alt text, and image assets whose title is just the filename. Not a
+    // health check; it never appears in `/health`. On by default; when off
+    // the route is a 404.
+    // 'contentEnabled' => true,
+    // 'contentPath' => '_ledge/content',
+    // Handle of an asset custom field that holds alt text. null = Craft's
+    // native Alternative Text. A handle no checked volume's field layout has
+    // is logged and native alt is used; a volume without the field is
+    // checked on native alt.
+    // 'contentAltField' => null,
+    // Volume handles to check. null = all volumes. Env: comma-separated.
+    // 'contentVolumes' => null,
+    // Example assets listed per issue (0-100).
+    // 'contentSampleLimit' => 25,
+    // Seconds the counts are cached for. 0 = recompute on every request.
+    // 'contentCacheTtl' => 3600,
+
     // ---------------------------------------------------------------------
     // Checks
     // ---------------------------------------------------------------------

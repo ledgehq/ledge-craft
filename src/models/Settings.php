@@ -25,6 +25,7 @@ class Settings extends Model
     public const DEFAULT_ACQUIRE_ALLOWED_HOSTS = ['ledgehq.app', '*.ledgehq.app'];
     public const ENV_PREFIX = 'LEDGE_';
     public const ENV_DISABLED_CHECKS = 'LEDGE_DISABLED_CHECKS';
+    public const MAX_CONTENT_SAMPLE_LIMIT = 100;
 
     /** Options that never read from the environment. */
     private const ENV_EXCLUDED = ['ledgeBaseUrl', 'enabledChecks'];
@@ -95,6 +96,13 @@ class Settings extends Model
     public string $dependenciesPath = '_ledge/dependencies';
     public bool $urisEnabled = false;
     public string $urisPath = '_ledge/uris';
+
+    public bool $contentEnabled = true;
+    public string $contentPath = '_ledge/content';
+    public ?string $contentAltField = null;
+    public ?array $contentVolumes = null;
+    public int $contentSampleLimit = 25;
+    public int $contentCacheTtl = 3600;
 
     public bool $acquireEnabled = false;
     public string $acquirePath = '_ledge/acquire';
@@ -237,6 +245,47 @@ class Settings extends Model
     }
 
     /**
+     * The content endpoint is on by default. When disabled the route is not
+     * registered (404); that is how Ledge detects the feature is off.
+     */
+    public function isContentEnabled(): bool
+    {
+        return $this->contentEnabled;
+    }
+
+    /**
+     * Handle of the asset custom field that holds alt text, or null for
+     * Craft's native `alt`.
+     */
+    public function getContentAltField(): ?string
+    {
+        $handle = trim((string)$this->contentAltField);
+
+        return $handle === '' ? null : $handle;
+    }
+
+    /**
+     * Volume handles the content checks are limited to, or null for all
+     * volumes. An empty list means all volumes too.
+     *
+     * @return string[]|null
+     */
+    public function getContentVolumes(): ?array
+    {
+        $handles = [];
+
+        foreach ($this->contentVolumes ?? [] as $handle) {
+            if (is_string($handle) && trim($handle) !== '') {
+                $handles[] = trim($handle);
+            }
+        }
+
+        $handles = array_values(array_unique($handles));
+
+        return $handles === [] ? null : $handles;
+    }
+
+    /**
      * Deliberately file-config only — no env parsing. The keyset base URL is
      * a trust anchor; it must never be attacker-influenceable or derived from
      * an incoming command.
@@ -328,8 +377,11 @@ class Settings extends Model
         ];
 
         return [
-            [['endpointPath', 'acquirePath', 'urisPath', 'dependenciesPath', 'keyHeader', 'queryKeyParam'], 'required'],
-            [['endpointPath', 'acquirePath', 'urisPath', 'dependenciesPath', 'keyHeader', 'queryKeyParam'], 'string'],
+            [['endpointPath', 'acquirePath', 'urisPath', 'dependenciesPath', 'contentPath', 'keyHeader', 'queryKeyParam'], 'required'],
+            [['endpointPath', 'acquirePath', 'urisPath', 'dependenciesPath', 'contentPath', 'keyHeader', 'queryKeyParam'], 'string'],
+            [['contentAltField'], 'match', 'pattern' => '/^\s*[a-zA-Z][a-zA-Z0-9_]*\s*$/'],
+            [['contentSampleLimit'], 'integer', 'min' => 0, 'max' => self::MAX_CONTENT_SAMPLE_LIMIT],
+            [['contentCacheTtl'], 'integer', 'min' => 0],
             [$percent, 'integer', 'min' => 1, 'max' => 100],
             [$counts, 'integer', 'min' => 0],
             [['queueStaleAfter', 'failedLoginsWindow', 'acquireMaxBundleBytes', 'acquireJobTtr', 'acquireJobPriority'], 'integer', 'min' => 1],

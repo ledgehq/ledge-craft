@@ -47,12 +47,15 @@ src/
 │   ├── QueueCheck.php         # Queue monitoring check
 │   └── Thresholds.php         # Shared degraded/unhealthy tier evaluation
 ├── config.php             # Annotated example config (copy to config/ledge.php)
+├── content/
+│   └── FilenameTitle.php  # Pure heuristic: is an asset title just its filename?
 ├── console/
 │   └── controllers/
 │       └── DefaultController.php # generate-key, publish-config
 ├── controllers/
 │   ├── AcquireController.php      # Signed acquire commands (opt-in)
 │   ├── AuthenticatesWithSecretKey.php # Shared key-auth trait
+│   ├── ContentController.php      # Image alt text / filename titles (not a health check)
 │   ├── DependenciesController.php # Composer package inventory
 │   ├── HealthController.php       # /health endpoint
 │   └── UrisController.php         # Public URL map (opt-in)
@@ -60,6 +63,7 @@ src/
 │   └── Settings.php       # Plugin settings (Settings::fromConfig resolves config > env > default)
 └── services/
     ├── AcquireService.php
+    ├── ContentService.php      # Content checks report (cached counts + samples)
     ├── DependenciesService.php # Shared package inventory + hash
     └── HealthService.php  # Orchestrates all checks
 ```
