@@ -150,4 +150,6 @@ Bundle uploads and callbacks may only be sent to allowlisted hosts; the allowlis
 
 While disabled, the acquire routes return `404` and the plugin behaves exactly as a health-only install. A companion opt-in endpoint, `GET /_ledge/uris` (enabled with `urisEnabled` / `LEDGE_URIS_ENABLED`), returns the site's crawlable public URL map on demand.
 
+Acquire builds the database dump with `mysqldump` or `pg_dump` (or Craft's `backupCommand` if you've set one), so the dump tool must be on the queue worker's `PATH`. **Craft Cloud doesn't include `mysqldump`**, so acquire, and with it update testing and backups, doesn't work on Craft Cloud. Leave `acquireEnabled` off there. `/health` works as usual.
+
 See [docs/acquire-protocol.md](docs/acquire-protocol.md) for the full wire protocol, bundle format, callback events, and command-signing snippets.
