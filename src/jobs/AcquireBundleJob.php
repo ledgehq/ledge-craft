@@ -13,9 +13,12 @@ use ledgehq\craftledge\acquire\BundleBuilder;
 use ledgehq\craftledge\acquire\BundleResult;
 use ledgehq\craftledge\acquire\BundleUploader;
 use ledgehq\craftledge\acquire\CallbackClient;
+use ledgehq\craftledge\acquire\CallbackPayloads;
 use ledgehq\craftledge\acquire\ManifestBuilder;
 use ledgehq\craftledge\acquire\Preflight;
 use ledgehq\craftledge\acquire\TempWorkspace;
+use ledgehq\craftledge\acquire\UploadAttempt;
+use ledgehq\craftledge\acquire\UploadDiagnostics;
 use ledgehq\craftledge\Ledge;
 use ledgehq\craftledge\services\AcquireService;
 use Throwable;
@@ -23,6 +26,12 @@ use yii\db\Query;
 
 class AcquireBundleJob extends BaseJob
 {
+    /**
+     * Ledge's upload URL is valid for 60 minutes from when it sent the
+     * command; no upload retry starts later than this after acceptance.
+     */
+    public const UPLOAD_DEADLINE_SECONDS = 55 * 60;
+
     public string $runId = '';
     public string $uploadUrl = '';
     public string $bundlePubkey = '';
@@ -30,12 +39,21 @@ class AcquireBundleJob extends BaseJob
     public string $callbackToken = '';
     public string $profile = 'full';
 
+    /**
+     * Unix time the command was accepted; 0 for jobs queued by a version that
+     * did not record it, which then upload without a deadline.
+     */
+    public int $acceptedAt = 0;
+
     public function execute($queue): void
     {
         $service = Ledge::getInstance()->acquire;
         $callbacks = $service->createCallbackClient($this->callbackUrl, $this->callbackToken);
         $workspace = new TempWorkspace(Craft::$app->getPath()->getRuntimePath() . '/ledge', $this->runId);
         $step = 'preflight';
+        $dumpDurationMs = null;
+        $encryptDurationMs = null;
+        $uploadDurationMs = null;
 
         try {
             $service->transition($this->runId, AcquireService::STATUS_RUNNING, $step);
@@ -63,32 +81,60 @@ class AcquireBundleJob extends BaseJob
 
             $step = 'encrypt';
             $service->transition($this->runId, AcquireService::STATUS_RUNNING, $step);
+            $encryptStart = microtime(true);
             $result = (new BundleBuilder())->build(
                 $entries,
                 $this->getBundlePubkeyBytes(),
                 Ledge::getInstance()->getSettings()->acquireMaxBundleBytes,
                 $workspace,
             );
+            $encryptDurationMs = (int)round((microtime(true) - $encryptStart) * 1000);
             $this->setProgress($queue, 0.8);
             $callbacks->send(CallbackClient::EVENT_PROGRESS, $step);
 
             $step = 'upload';
             $service->transition($this->runId, AcquireService::STATUS_RUNNING, $step);
-            (new BundleUploader(Craft::createGuzzleClient()))->upload($result->path, $this->uploadUrl);
+            $upload = (new BundleUploader(Craft::createGuzzleClient()))->upload(
+                $result->path,
+                $this->uploadUrl,
+                function(UploadAttempt $attempt, UploadDiagnostics $soFar) use ($callbacks): void {
+                    $this->reportRetry($callbacks, $attempt, $soFar);
+                },
+                $this->acceptedAt > 0 ? (float)($this->acceptedAt + self::UPLOAD_DEADLINE_SECONDS) : null,
+                [$this->callbackToken, $this->bundlePubkey],
+            );
+            $uploadDurationMs = $upload->durationMs;
             $this->setProgress($queue, 1.0);
 
             $service->transition($this->runId, AcquireService::STATUS_COMPLETED, $step, null, $result->size, $result->sha256);
-            $callbacks->send(CallbackClient::EVENT_COMPLETED, $step, $this->completedDetail($result, $dumpDurationMs));
+            $callbacks->send(CallbackClient::EVENT_COMPLETED, $step, CallbackPayloads::completed(
+                $this->completedDetail($result, $dumpDurationMs),
+                ['encrypt_duration_ms' => $encryptDurationMs, 'upload_duration_ms' => $uploadDurationMs],
+                memory_get_peak_usage(true),
+                $upload,
+            ));
         } catch (Throwable $e) {
             $reason = $e instanceof AcquireException ? $e->reason : 'unexpected_error';
             $detail = $e instanceof AcquireException ? $e->detail : $e->getMessage();
+            $upload = $e instanceof AcquireException && ($e->context['upload'] ?? null) instanceof UploadDiagnostics ? $e->context['upload'] : null;
+
+            if ($upload !== null) {
+                $uploadDurationMs = $upload->durationMs;
+            }
 
             Craft::error("Ledge acquisition {$this->runId} failed at {$step}: {$e->getMessage()}", __METHOD__);
             $service->transition($this->runId, AcquireService::STATUS_FAILED, $step, $reason);
-            $callbacks->send(CallbackClient::EVENT_FAILED, $step, [
-                'reason' => $reason,
-                'detail' => $detail,
-            ]);
+            $callbacks->send(CallbackClient::EVENT_FAILED, $step, CallbackPayloads::failed(
+                $reason,
+                $detail,
+                [
+                    'dump_duration_ms' => $dumpDurationMs,
+                    'encrypt_duration_ms' => $encryptDurationMs,
+                    'upload_duration_ms' => $uploadDurationMs,
+                ],
+                memory_get_peak_usage(true),
+                $upload,
+            ));
 
             throw $e;
         } finally {
@@ -180,6 +226,14 @@ class AcquireBundleJob extends BaseJob
             'size' => $result->size,
             'sha256' => $result->sha256,
         ];
+    }
+
+    private function reportRetry(CallbackClient $callbacks, UploadAttempt $attempt, UploadDiagnostics $soFar): void
+    {
+        $payload = CallbackPayloads::uploadRetried($soFar);
+
+        Craft::warning("Ledge acquisition {$this->runId} upload {$payload['reason']}; retrying in {$attempt->retryInMs}ms", __METHOD__);
+        $callbacks->send(CallbackClient::EVENT_UPLOAD_RETRIED, 'upload', $payload);
     }
 
     private function writeJson(string $path, array $data): void

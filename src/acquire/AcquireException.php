@@ -12,6 +12,7 @@ class AcquireException extends RuntimeException
         public string $reason,
         public int $httpStatus = 400,
         public ?string $detail = null,
+        public array $context = [],
     ) {
         parent::__construct($detail !== null ? "{$reason}: {$detail}" : $reason);
     }
