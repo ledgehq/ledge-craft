@@ -257,6 +257,7 @@ class AcquireService extends Component
             'callbackUrl' => $command->callbackUrl,
             'callbackToken' => $command->callbackToken,
             'profile' => $command->profile,
+            'acceptedAt' => time(),
         ]);
 
         $queue = Craft::$app->getQueue();
